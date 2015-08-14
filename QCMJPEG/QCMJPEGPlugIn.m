@@ -116,6 +116,8 @@
 		NSThread *connectionThread = [[NSThread alloc] initWithTarget:self selector:@selector(startConnectionThread) object:nil];
 		connectionThread.name = @"QCMJPEGPlugIn.connectionThead";
 		self.connectionThread = connectionThread;
+		
+		[connectionThread start];
 	}
 	return self;
 }
@@ -268,8 +270,6 @@
 
 - (void)startConnection
 {
-	NSLog(@"%s", __FUNCTION__);
-	
 	@autoreleasepool
 	{
 		[self stopConnection];
@@ -295,8 +295,6 @@
 
 - (void)stopConnection
 {
-	NSLog(@"%s", __FUNCTION__);
-
 	@autoreleasepool
 	{
 		NSURLConnection *connection = self.connection;
@@ -318,13 +316,11 @@
 
 - (BOOL)startExecution:(id <QCPlugInContext>)context
 {
-	[self.connectionThread start];
 	return YES;
 }
 
 - (void)stopExecution:(id <QCPlugInContext>)context
 {
-	[self performSelector:@selector(stopConnectionThread) onThread:self.connectionThread withObject:nil waitUntilDone:YES];
 }
 
 - (void)enableExecution:(id <QCPlugInContext>)context
