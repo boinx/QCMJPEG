@@ -44,6 +44,7 @@
 				5077A2831B7DEC470097AEE9 /* Config */,
 				5077A2871B7DEC470097AEE9 /* Scripts */,
 				5077A2781B7DEC2E0097AEE9 /* QCMJPEG */,
+				5077A28F1B7E23E60097AEE9 /* Samples */,
 				5077A2771B7DEC2E0097AEE9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -83,6 +84,13 @@
 				5077A2891B7DEC470097AEE9 /* UpdateBuildNumber.sh */,
 			);
 			path = Scripts;
+			sourceTree = "<group>";
+		};
+		5077A28F1B7E23E60097AEE9 /* Samples */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Samples;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

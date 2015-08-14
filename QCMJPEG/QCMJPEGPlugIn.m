@@ -14,6 +14,7 @@
 @property (nonatomic, strong) NSString *password;
 
 @property (nonatomic, strong) CIImage *image;
+@property (nonatomic, assign) NSNumber *connected;
 
 @property (nonatomic, strong) NSMutableData *data;
 
@@ -25,13 +26,23 @@
 @dynamic inputLocation;
 @dynamic inputUsername;
 @dynamic inputPassword;
+@dynamic inputUpdate;
+
 @dynamic outputImage;
+@dynamic outputConnected;
 
 + (NSDictionary *)attributes
 {
     return @{
-		QCPlugInAttributeNameKey: @"MJPEG",
+		QCPlugInAttributeNameKey: @"MJPEG Stream",
 		QCPlugInAttributeDescriptionKey: @"Connects a Motion-JPEG stream using the HTTP protocol",
+		QCPlugInAttributeCopyrightKey: @"© 2015 2015 Boinx Software Ltd. http://boinx.com",
+		QCPlugInAttributeCategoriesKey: @[
+			@"Program", // used by JavaScript patch
+		],
+		QCPlugInAttributeExamplesKey: @[
+			@"MJPEG.qtz",
+		],
 	};
 }
 
@@ -58,10 +69,24 @@
 		};
 	}
 	
+	if ([key isEqualToString:@"inputUpdate"])
+	{
+		return @{
+			QCPortAttributeNameKey: @"Update",
+		};
+	}
+	
 	if ([key isEqualToString:@"outputImage"])
 	{
 		return @{
 			QCPortAttributeNameKey: @"Image",
+		};
+	}
+	
+	if ([key isEqualToString:@"outputConnected"])
+	{
+		return @{
+			QCPortAttributeNameKey: @"Connected",
 		};
 	}
 	
@@ -139,7 +164,7 @@
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-	NSLog(@"%@ %@", connection, error);
+	[self stopConnection];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
@@ -210,11 +235,24 @@
 		
 			if (data.length == NSMaxRange(JPEGRange))
 			{
+				// no more data left
 				data.length = 0;
 			}
 			else
 			{
-				[data replaceBytesInRange:NSMakeRange(0, NSMaxRange(JPEGRange)) withBytes:NULL length:0];
+				NSRange searchRange = NSMakeRange(NSMaxRange(JPEGRange), data.length - NSMaxRange(JPEGRange));
+				
+				const NSRange SOIRange = [data rangeOfData:SOIData options:0 range:searchRange];
+				if (SOIRange.location == NSNotFound)
+				{
+					// no JPEG SOI found, can be discarded
+					data.length = 0;
+				}
+				else
+				{
+					// keep the data starting at the next SOI
+					[data replaceBytesInRange:NSMakeRange(0, SOIRange.location) withBytes:NULL length:0];
+				}
 			}
 		}
 	}
@@ -222,16 +260,15 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-	@autoreleasepool
-	{
-		NSLog(@"%@", connection);
-	}
+	[self stopConnection];
 }
 
 #pragma mark -
 
 - (void)startConnection
 {
+	NSLog(@"%s", __FUNCTION__);
+	
 	@autoreleasepool
 	{
 		[self stopConnection];
@@ -239,8 +276,12 @@
 		NSLock *lock = self.lock;
 		[lock lock];
 
+		self.connected = @YES;
+		
 		NSURL *URL = [NSURL URLWithString:self.location];
 		
+		[lock unlock];
+
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL];
 		
 		// TODO: headers?
@@ -248,12 +289,13 @@
 		
 		self.connection = [NSURLConnection connectionWithRequest:request delegate:self];
 		
-		[lock unlock];
 	}
 }
 
 - (void)stopConnection
 {
+	NSLog(@"%s", __FUNCTION__);
+
 	@autoreleasepool
 	{
 		NSURLConnection *connection = self.connection;
@@ -262,6 +304,13 @@
 			[connection cancel];
 			self.connection = nil;
 		}
+		
+		NSLock *lock = self.lock;
+		[lock lock];
+		
+		self.connected = @NO;
+		
+		[lock unlock];
 	}
 }
 
@@ -290,27 +339,22 @@
 	NSLock *lock = self.lock;
 	[lock lock];
 	
-	BOOL reconnect = NO;
-	
 	if ([self didValueForInputKeyChange:@"inputLocation"])
 	{
 		self.location = self.inputLocation;
-		reconnect = YES;
 	}
 	
 	if ([self didValueForInputKeyChange:@"inputUsername"])
 	{
 		self.username = self.inputUsername;
-		reconnect = YES;
 	}
 	
 	if ([self didValueForInputKeyChange:@"inputPassword"])
 	{
 		self.password = self.inputPassword;
-		reconnect = YES;
 	}
 	
-	if (reconnect)
+	if ([self didValueForInputKeyChange:@"inputUpdate"] && self.inputUpdate == YES)
 	{
 		[self performSelector:@selector(startConnection) onThread:self.connectionThread withObject:nil waitUntilDone:NO];
 	}
@@ -323,53 +367,17 @@
 			self.image = nil;
 		}
 	}
+	
+	{
+		NSNumber *connected = self.connected;
+		if (connected != nil)
+		{
+			self.outputConnected = connected.boolValue;
+			self.connected = nil;
+		}
+	}
+	
 	[lock unlock];
-
-#if 0
-	if(self.doneSignal != nil)
-	{
-		if(self.doneSignal.boolValue)
-		{
-			self.outputParsedJSON = self.parsedJSON;
-			self.outputDoneSignal = YES;
-			
-			self.parsedJSON = nil;
-			
-			self.doneSignal = @NO;
-		}
-		else
-		{
-			self.outputDoneSignal = NO;
-			
-			self.doneSignal = nil;
-		}
-	}
-	
-	if(self.statusCode != nil)
-	{
-		self.outputStatusCode = self.statusCode.unsignedIntegerValue;
-		self.statusCode = nil;
-	}
-	
-	if(self.connecting != nil)
-	{
-		self.outputConnecting = self.connecting.boolValue;
-		self.connecting = nil;
-	}
-	
-	if(self.connected != nil)
-	{
-		self.outputConnected = self.connected.boolValue;
-		self.connected = nil;
-	}
-	
-	if(self.error)
-	{
-		[context logMessage:@"JSON Import error: %@", self.error];
-		
-		self.error = nil;
-	}
-#endif
 	
 	return YES;
 }
