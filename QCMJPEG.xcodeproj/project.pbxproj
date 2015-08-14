@@ -1,0 +1,305 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		5077A27D1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m in Sources */ = {isa = PBXBuildFile; fileRef = 5077A27C1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m */; };
+		5077A28A1B7DEC470097AEE9 /* .travis.yml in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2841B7DEC470097AEE9 /* .travis.yml */; };
+		5077A28B1B7DEC470097AEE9 /* BuildNumber.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2851B7DEC470097AEE9 /* BuildNumber.xcconfig */; };
+		5077A28C1B7DEC470097AEE9 /* Project.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2861B7DEC470097AEE9 /* Project.xcconfig */; };
+		5077A28D1B7DEC470097AEE9 /* InstallPlugIn.sh in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2881B7DEC470097AEE9 /* InstallPlugIn.sh */; };
+		5077A28E1B7DEC470097AEE9 /* UpdateBuildNumber.sh in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2891B7DEC470097AEE9 /* UpdateBuildNumber.sh */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		5077A2761B7DEC2E0097AEE9 /* QCMJPEG.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QCMJPEG.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		5077A27A1B7DEC2E0097AEE9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5077A27B1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QCMJPEGPlugIn.h; sourceTree = "<group>"; };
+		5077A27C1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = QCMJPEGPlugIn.m; sourceTree = "<group>"; };
+		5077A2841B7DEC470097AEE9 /* .travis.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
+		5077A2851B7DEC470097AEE9 /* BuildNumber.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = BuildNumber.xcconfig; sourceTree = "<group>"; };
+		5077A2861B7DEC470097AEE9 /* Project.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
+		5077A2881B7DEC470097AEE9 /* InstallPlugIn.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = InstallPlugIn.sh; sourceTree = "<group>"; };
+		5077A2891B7DEC470097AEE9 /* UpdateBuildNumber.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = UpdateBuildNumber.sh; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5077A2721B7DEC2E0097AEE9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		5077A26C1B7DEC2E0097AEE9 = {
+			isa = PBXGroup;
+			children = (
+				5077A2831B7DEC470097AEE9 /* Config */,
+				5077A2871B7DEC470097AEE9 /* Scripts */,
+				5077A2781B7DEC2E0097AEE9 /* QCMJPEG */,
+				5077A2771B7DEC2E0097AEE9 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		5077A2771B7DEC2E0097AEE9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5077A2761B7DEC2E0097AEE9 /* QCMJPEG.plugin */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		5077A2781B7DEC2E0097AEE9 /* QCMJPEG */ = {
+			isa = PBXGroup;
+			children = (
+				5077A27B1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.h */,
+				5077A27C1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m */,
+				5077A27A1B7DEC2E0097AEE9 /* Info.plist */,
+			);
+			path = QCMJPEG;
+			sourceTree = "<group>";
+		};
+		5077A2831B7DEC470097AEE9 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				5077A2841B7DEC470097AEE9 /* .travis.yml */,
+				5077A2851B7DEC470097AEE9 /* BuildNumber.xcconfig */,
+				5077A2861B7DEC470097AEE9 /* Project.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		5077A2871B7DEC470097AEE9 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				5077A2881B7DEC470097AEE9 /* InstallPlugIn.sh */,
+				5077A2891B7DEC470097AEE9 /* UpdateBuildNumber.sh */,
+			);
+			path = Scripts;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5077A2751B7DEC2E0097AEE9 /* QCMJPEG */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5077A2801B7DEC2E0097AEE9 /* Build configuration list for PBXNativeTarget "QCMJPEG" */;
+			buildPhases = (
+				5077A2711B7DEC2E0097AEE9 /* Sources */,
+				5077A2721B7DEC2E0097AEE9 /* Frameworks */,
+				5077A2731B7DEC2E0097AEE9 /* Resources */,
+				5077A2741B7DEC2E0097AEE9 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = QCMJPEG;
+			productName = QCMJPEG;
+			productReference = 5077A2761B7DEC2E0097AEE9 /* QCMJPEG.plugin */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5077A26D1B7DEC2E0097AEE9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0640;
+				ORGANIZATIONNAME = "Boinx Software Ltd";
+				TargetAttributes = {
+					5077A2751B7DEC2E0097AEE9 = {
+						CreatedOnToolsVersion = 6.4;
+					};
+				};
+			};
+			buildConfigurationList = 5077A2701B7DEC2E0097AEE9 /* Build configuration list for PBXProject "QCMJPEG" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 5077A26C1B7DEC2E0097AEE9;
+			productRefGroup = 5077A2771B7DEC2E0097AEE9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5077A2751B7DEC2E0097AEE9 /* QCMJPEG */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		5077A2731B7DEC2E0097AEE9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5077A28B1B7DEC470097AEE9 /* BuildNumber.xcconfig in Resources */,
+				5077A28C1B7DEC470097AEE9 /* Project.xcconfig in Resources */,
+				5077A28A1B7DEC470097AEE9 /* .travis.yml in Resources */,
+				5077A28D1B7DEC470097AEE9 /* InstallPlugIn.sh in Resources */,
+				5077A28E1B7DEC470097AEE9 /* UpdateBuildNumber.sh in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		5077A2741B7DEC2E0097AEE9 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This shell script simply copies the built plug-in to \"~/Library/Graphics/Quartz Composer Plug-Ins\" and overrides any previous version at that location\n\nmkdir -p \"$USER_LIBRARY_DIR/Graphics/Quartz Composer Plug-Ins\"\nrm -rf \"$USER_LIBRARY_DIR/Graphics/Quartz Composer Plug-Ins/QCMJPEG.plugin\"\ncp -rf \"$BUILT_PRODUCTS_DIR/QCMJPEG.plugin\" \"$USER_LIBRARY_DIR/Graphics/Quartz Composer Plug-Ins/\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		5077A2711B7DEC2E0097AEE9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5077A27D1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5077A27E1B7DEC2E0097AEE9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		5077A27F1B7DEC2E0097AEE9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		5077A2811B7DEC2E0097AEE9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = QCMJPEG/Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Graphics/Quartz Composer Plug-Ins";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = plugin;
+			};
+			name = Debug;
+		};
+		5077A2821B7DEC2E0097AEE9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = QCMJPEG/Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Graphics/Quartz Composer Plug-Ins";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = plugin;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		5077A2701B7DEC2E0097AEE9 /* Build configuration list for PBXProject "QCMJPEG" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5077A27E1B7DEC2E0097AEE9 /* Debug */,
+				5077A27F1B7DEC2E0097AEE9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5077A2801B7DEC2E0097AEE9 /* Build configuration list for PBXNativeTarget "QCMJPEG" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5077A2811B7DEC2E0097AEE9 /* Debug */,
+				5077A2821B7DEC2E0097AEE9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 5077A26D1B7DEC2E0097AEE9 /* Project object */;
+}
