@@ -8,11 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5077A27D1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m in Sources */ = {isa = PBXBuildFile; fileRef = 5077A27C1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m */; };
-		5077A28A1B7DEC470097AEE9 /* .travis.yml in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2841B7DEC470097AEE9 /* .travis.yml */; };
-		5077A28B1B7DEC470097AEE9 /* BuildNumber.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2851B7DEC470097AEE9 /* BuildNumber.xcconfig */; };
-		5077A28C1B7DEC470097AEE9 /* Project.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2861B7DEC470097AEE9 /* Project.xcconfig */; };
-		5077A28D1B7DEC470097AEE9 /* InstallPlugIn.sh in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2881B7DEC470097AEE9 /* InstallPlugIn.sh */; };
-		5077A28E1B7DEC470097AEE9 /* UpdateBuildNumber.sh in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2891B7DEC470097AEE9 /* UpdateBuildNumber.sh */; };
+		5077A2911B7E24490097AEE9 /* MJPEG.qtz in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2901B7E24490097AEE9 /* MJPEG.qtz */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +21,7 @@
 		5077A2861B7DEC470097AEE9 /* Project.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
 		5077A2881B7DEC470097AEE9 /* InstallPlugIn.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = InstallPlugIn.sh; sourceTree = "<group>"; };
 		5077A2891B7DEC470097AEE9 /* UpdateBuildNumber.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = UpdateBuildNumber.sh; sourceTree = "<group>"; };
+		5077A2901B7E24490097AEE9 /* MJPEG.qtz */ = {isa = PBXFileReference; lastKnownFileType = "video.quartz-composer"; path = MJPEG.qtz; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,8 +86,9 @@
 		5077A28F1B7E23E60097AEE9 /* Samples */ = {
 			isa = PBXGroup;
 			children = (
+				5077A2901B7E24490097AEE9 /* MJPEG.qtz */,
 			);
-			name = Samples;
+			path = Samples;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -103,7 +101,6 @@
 				5077A2711B7DEC2E0097AEE9 /* Sources */,
 				5077A2721B7DEC2E0097AEE9 /* Frameworks */,
 				5077A2731B7DEC2E0097AEE9 /* Resources */,
-				5077A2741B7DEC2E0097AEE9 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -150,31 +147,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5077A28B1B7DEC470097AEE9 /* BuildNumber.xcconfig in Resources */,
-				5077A28C1B7DEC470097AEE9 /* Project.xcconfig in Resources */,
-				5077A28A1B7DEC470097AEE9 /* .travis.yml in Resources */,
-				5077A28D1B7DEC470097AEE9 /* InstallPlugIn.sh in Resources */,
-				5077A28E1B7DEC470097AEE9 /* UpdateBuildNumber.sh in Resources */,
+				5077A2911B7E24490097AEE9 /* MJPEG.qtz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		5077A2741B7DEC2E0097AEE9 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This shell script simply copies the built plug-in to \"~/Library/Graphics/Quartz Composer Plug-Ins\" and overrides any previous version at that location\n\nmkdir -p \"$USER_LIBRARY_DIR/Graphics/Quartz Composer Plug-Ins\"\nrm -rf \"$USER_LIBRARY_DIR/Graphics/Quartz Composer Plug-Ins/QCMJPEG.plugin\"\ncp -rf \"$BUILT_PRODUCTS_DIR/QCMJPEG.plugin\" \"$USER_LIBRARY_DIR/Graphics/Quartz Composer Plug-Ins/\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5077A2711B7DEC2E0097AEE9 /* Sources */ = {
