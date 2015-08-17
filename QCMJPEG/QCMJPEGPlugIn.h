@@ -1,11 +1,4 @@
-#import <Quartz/Quartz.h>
-
-@interface QCImagePort : NSObject <QCPlugInOutputImageProvider>
-
-- (id)imageValue;
-- (void)setImageValue:(id)imageValue;
-
-@end
+@import Quartz;
 
 
 @interface QCMJPEGPlugIn : QCPlugIn
