@@ -10,8 +10,6 @@
 @property (nonatomic, strong) NSURLConnection *connection;
 
 @property (nonatomic, strong) NSString *location;
-@property (nonatomic, strong) NSString *username;
-@property (nonatomic, strong) NSString *password;
 
 @property (nonatomic, strong) CIImage *image;
 @property (nonatomic, assign) NSNumber *connected;
@@ -24,8 +22,6 @@
 @implementation QCMJPEGPlugIn
 
 @dynamic inputLocation;
-@dynamic inputUsername;
-@dynamic inputPassword;
 @dynamic inputUpdate;
 
 @dynamic outputImage;
@@ -53,20 +49,6 @@
 	{
 		return @{
 			QCPortAttributeNameKey: @"Location",
-		};
-	}
-	
-	if ([key isEqualToString:@"inputUsername"])
-	{
-		return @{
-			QCPortAttributeNameKey: @"Username",
-		};
-	}
-	
-	if ([key isEqualToString:@"inputPassword"])
-	{
-		return @{
-			QCPortAttributeNameKey: @"Password",
 		};
 	}
 	
@@ -336,23 +318,10 @@
 	NSLock *lock = self.lock;
 	[lock lock];
 	
-	if ([self didValueForInputKeyChange:@"inputLocation"])
-	{
-		self.location = self.inputLocation;
-	}
-	
-	if ([self didValueForInputKeyChange:@"inputUsername"])
-	{
-		self.username = self.inputUsername;
-	}
-	
-	if ([self didValueForInputKeyChange:@"inputPassword"])
-	{
-		self.password = self.inputPassword;
-	}
-	
 	if ([self didValueForInputKeyChange:@"inputUpdate"] && self.inputUpdate == YES)
 	{
+		self.location = self.inputLocation;
+
 		[self performSelector:@selector(startConnection) onThread:self.connectionThread withObject:nil waitUntilDone:NO];
 	}
 	
