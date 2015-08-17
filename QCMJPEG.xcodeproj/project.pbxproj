@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		5077A27D1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m in Sources */ = {isa = PBXBuildFile; fileRef = 5077A27C1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m */; };
 		5077A2911B7E24490097AEE9 /* MJPEG.qtz in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2901B7E24490097AEE9 /* MJPEG.qtz */; };
+		507E38441B820D13008AC4DB /* .travis.yml in Resources */ = {isa = PBXBuildFile; fileRef = 507E38431B820D13008AC4DB /* .travis.yml */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -16,12 +17,12 @@
 		5077A27A1B7DEC2E0097AEE9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5077A27B1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QCMJPEGPlugIn.h; sourceTree = "<group>"; };
 		5077A27C1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = QCMJPEGPlugIn.m; sourceTree = "<group>"; };
-		5077A2841B7DEC470097AEE9 /* .travis.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		5077A2851B7DEC470097AEE9 /* BuildNumber.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = BuildNumber.xcconfig; sourceTree = "<group>"; };
 		5077A2861B7DEC470097AEE9 /* Project.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
 		5077A2881B7DEC470097AEE9 /* InstallPlugIn.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = InstallPlugIn.sh; sourceTree = "<group>"; };
 		5077A2891B7DEC470097AEE9 /* UpdateBuildNumber.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = UpdateBuildNumber.sh; sourceTree = "<group>"; };
 		5077A2901B7E24490097AEE9 /* MJPEG.qtz */ = {isa = PBXFileReference; lastKnownFileType = "video.quartz-composer"; path = MJPEG.qtz; sourceTree = "<group>"; };
+		507E38431B820D13008AC4DB /* .travis.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = .travis.yml; path = ../.travis.yml; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,7 +68,7 @@
 		5077A2831B7DEC470097AEE9 /* Config */ = {
 			isa = PBXGroup;
 			children = (
-				5077A2841B7DEC470097AEE9 /* .travis.yml */,
+				507E38431B820D13008AC4DB /* .travis.yml */,
 				5077A2851B7DEC470097AEE9 /* BuildNumber.xcconfig */,
 				5077A2861B7DEC470097AEE9 /* Project.xcconfig */,
 			);
@@ -147,6 +148,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				507E38441B820D13008AC4DB /* .travis.yml in Resources */,
 				5077A2911B7E24490097AEE9 /* MJPEG.qtz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -285,6 +287,7 @@
 				5077A2821B7DEC2E0097AEE9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
