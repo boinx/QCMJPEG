@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		5077A27D1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m in Sources */ = {isa = PBXBuildFile; fileRef = 5077A27C1B7DEC2E0097AEE9 /* QCMJPEGPlugIn.m */; };
 		5077A2911B7E24490097AEE9 /* MJPEG.qtz in Resources */ = {isa = PBXBuildFile; fileRef = 5077A2901B7E24490097AEE9 /* MJPEG.qtz */; };
-		507E38441B820D13008AC4DB /* .travis.yml in Resources */ = {isa = PBXBuildFile; fileRef = 507E38431B820D13008AC4DB /* .travis.yml */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -148,7 +147,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				507E38441B820D13008AC4DB /* .travis.yml in Resources */,
 				5077A2911B7E24490097AEE9 /* MJPEG.qtz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -250,11 +248,14 @@
 		5077A2811B7DEC2E0097AEE9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = QCMJPEG/Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Graphics/Quartz Composer Plug-Ins";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.boinx.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				SKIP_INSTALL = YES;
 				WRAPPER_EXTENSION = plugin;
 			};
@@ -263,11 +264,14 @@
 		5077A2821B7DEC2E0097AEE9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = QCMJPEG/Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Graphics/Quartz Composer Plug-Ins";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.boinx.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				SKIP_INSTALL = YES;
 				WRAPPER_EXTENSION = plugin;
 			};

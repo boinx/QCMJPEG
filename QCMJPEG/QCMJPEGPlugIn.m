@@ -32,7 +32,7 @@
     return @{
 		QCPlugInAttributeNameKey: @"MJPEG Stream",
 		QCPlugInAttributeDescriptionKey: @"Connects a Motion-JPEG stream using the HTTP protocol",
-		QCPlugInAttributeCopyrightKey: @"© 2015 2015 Boinx Software Ltd. http://boinx.com",
+		QCPlugInAttributeCopyrightKey: @"© 2015 Boinx Software Ltd. http://boinx.com",
 		QCPlugInAttributeCategoriesKey: @[
 			@"Source", // Video Input
 			@"Source/Device", // Video Input
