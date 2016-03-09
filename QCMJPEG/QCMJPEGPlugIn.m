@@ -12,7 +12,8 @@
 @property (nonatomic, strong) NSString *location;
 
 @property (nonatomic, strong) CIImage *image;
-@property (nonatomic, assign) NSNumber *connected;
+@property (nonatomic, assign) QCMJPEGConnectionState connectionState;
+@property (nonatomic, strong) NSString *lastConnectionError;
 
 @property (nonatomic, strong) NSMutableData *data;
 
@@ -25,7 +26,8 @@
 @dynamic inputUpdate;
 
 @dynamic outputImage;
-@dynamic outputConnected;
+@dynamic outputConnectionState;
+@dynamic outputConnectionError;
 
 + (NSDictionary *)attributes
 {
@@ -66,11 +68,18 @@
 		};
 	}
 	
-	if ([key isEqualToString:@"outputConnected"])
+	if ([key isEqualToString:@"outputConnectionState"])
 	{
 		return @{
-			QCPortAttributeNameKey: @"Connected",
-		};
+				 QCPortAttributeNameKey: @"Connection State",
+				 };
+	}
+	
+	if ([key isEqualToString:@"outputConnectionError"])
+	{
+		return @{
+				 QCPortAttributeNameKey: @"Connection Error",
+				 };
 	}
 	
 	return nil;
@@ -98,6 +107,7 @@
 		NSThread *connectionThread = [[NSThread alloc] initWithTarget:self selector:@selector(startConnectionThread) object:nil];
 		connectionThread.name = @"QCMJPEGPlugIn.connectionThead";
 		self.connectionThread = connectionThread;
+		self.connectionState = QCMJPEGConnectionStateDisconnected;
 		
 		[connectionThread start];
 	}
@@ -149,16 +159,50 @@
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
+
+	NSLock *lock = self.lock;
+	[lock lock];
+	{
+		if(error)
+		{
+			self.connectionState = QCMJPEGConnectionStateConnectionError;
+			self.lastConnectionError = [error localizedDescription];
+		}
+		else
+		{
+			self.connectionState = QCMJPEGConnectionStateDisconnected;
+		}
+	}
+	[lock unlock];
+
 	[self stopConnection];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
-
+	NSLock *lock = self.lock;
+	[lock lock];
+	{
+		if(self.connectionState <= QCMJPEGConnectionStateConnecting)
+		{
+			self.connectionState = QCMJPEGConnectionStateConnected;
+		}
+	}
+	[lock unlock];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)newData
 {
+	NSLock *lock = self.lock;
+	[lock lock];
+	{
+		if(self.connectionState <= QCMJPEGConnectionStateConnecting)
+		{
+			self.connectionState = QCMJPEGConnectionStateConnected;
+		}
+	}
+	[lock unlock];
+
 	@autoreleasepool
 	{
 		NSMutableData *data = self.data;
@@ -212,9 +256,11 @@
 			{
 				NSLock *lock = self.lock;
 				[lock lock];
-				
-				self.image = JPEGImage;
-				
+				{
+					self.connectionState = QCMJPEGConnectionStateReceivingData;
+					self.lastConnectionError = @"";
+					self.image = JPEGImage;
+				}
 				[lock unlock];
 			}
 		
@@ -256,13 +302,13 @@
 	{
 		[self stopConnection];
 		
+		NSURL *URL;
+		
 		NSLock *lock = self.lock;
 		[lock lock];
-
-		self.connected = @YES;
-		
-		NSURL *URL = [NSURL URLWithString:self.location];
-		
+		{
+			URL = [NSURL URLWithString:self.location];
+		}
 		[lock unlock];
 
 		NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL];
@@ -288,9 +334,12 @@
 		
 		NSLock *lock = self.lock;
 		[lock lock];
-		
-		self.connected = @NO;
-		
+		{
+			if(self.connectionState != QCMJPEGConnectionStateConnectionError)
+			{
+				self.connectionState = QCMJPEGConnectionStateDisconnected;
+			}
+		}
 		[lock unlock];
 	}
 }
@@ -335,13 +384,15 @@
 	}
 	
 	{
-		NSNumber *connected = self.connected;
-		if (connected != nil)
+		NSString *lastConnectionError = self.lastConnectionError;
+		if (lastConnectionError != nil)
 		{
-			self.outputConnected = connected.boolValue;
-			self.connected = nil;
+			self.outputConnectionError = lastConnectionError;
+			self.lastConnectionError = nil;
 		}
 	}
+	
+	self.outputConnectionState = self.connectionState;
 	
 	[lock unlock];
 	
