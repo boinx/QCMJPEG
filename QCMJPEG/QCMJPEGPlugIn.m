@@ -214,10 +214,10 @@
 
 		[data appendData:newData];
 		
-		const uint8_t SOIToken[2] = { 0xFF, 0xD8 };
+		const uint8_t SOIToken[2] = { 0xFF, 0xD8 };	// Start Of Image
 		NSData *SOIData = [NSData dataWithBytes:SOIToken length:sizeof(SOIToken)];
 		
-		const uint8_t EOIToken[2] = { 0xFF, 0xD9 };
+		const uint8_t EOIToken[2] = { 0xFF, 0xD9 };	// End Of Image
 		NSData *EOIData = [NSData dataWithBytes:EOIToken length:sizeof(EOIToken)];
 		
 		NSRange JPEGRange = NSMakeRange(NSNotFound, 0);
@@ -238,13 +238,15 @@
 			searchRange = NSMakeRange(NSMaxRange(SOIRange), data.length - NSMaxRange(SOIRange));
 			
 			const NSRange EOIRange = [data rangeOfData:EOIData options:NSDataSearchBackwards range:searchRange];
-			if (EOIRange.location == NSNotFound)
+			if (EOIRange.location != NSNotFound)
 			{
-				searchRange = NSMakeRange(0, SOIRange.location);
-				continue;
+				// found an image
+				JPEGRange = NSMakeRange(SOIRange.location, NSMaxRange(EOIRange) - SOIRange.location);
+				break;
 			}
-			
-			JPEGRange = NSMakeRange(SOIRange.location, NSMaxRange(EOIRange) - SOIRange.location);
+
+			// asuming the data looks like this [...SOI....EOI...SOI...] we need to check for a previous SOI
+			searchRange = NSMakeRange(0, SOIRange.location);
 		}
 		while(1);
 
