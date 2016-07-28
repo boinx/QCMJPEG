@@ -17,6 +17,9 @@
 
 @property (nonatomic, strong) NSMutableData *data;
 
+@property (nonatomic, strong) dispatch_queue_t queue;
+@property (nonatomic, strong) dispatch_semaphore_t renderSemaphore;
+
 @end
 
 
@@ -104,12 +107,17 @@
 		lock.name = @"QCMJPEGPlugIn.lock";
 		self.lock = lock;
 		
+		self.renderSemaphore = dispatch_semaphore_create(2);
+		self.queue = dispatch_queue_create("QCMJPEGImageDecode", DISPATCH_QUEUE_SERIAL);
+
 		NSThread *connectionThread = [[NSThread alloc] initWithTarget:self selector:@selector(startConnectionThread) object:nil];
 		connectionThread.name = @"QCMJPEGPlugIn.connectionThead";
 		self.connectionThread = connectionThread;
 		self.connectionState = QCMJPEGConnectionStateDisconnected;
 		
 		[connectionThread start];
+		
+
 	}
 	return self;
 }
@@ -214,80 +222,104 @@
 
 		[data appendData:newData];
 		
-		const uint8_t SOIToken[2] = { 0xFF, 0xD8 };	// Start Of Image
-		NSData *SOIData = [NSData dataWithBytes:SOIToken length:sizeof(SOIToken)];
 		
-		const uint8_t EOIToken[2] = { 0xFF, 0xD9 };	// End Of Image
-		NSData *EOIData = [NSData dataWithBytes:EOIToken length:sizeof(EOIToken)];
-		
-		NSRange JPEGRange = NSMakeRange(NSNotFound, 0);
-		
-		NSRange searchRange = NSMakeRange(0, data.length);
-		do
+		dispatch_semaphore_t renderSemaphore = self.renderSemaphore;
+		if (dispatch_semaphore_wait(renderSemaphore, DISPATCH_TIME_NOW) == 0)
 		{
-			// Search the last SOI Token first
+			const uint8_t SOIToken[2] = { 0xFF, 0xD8 };	// Start Of Image
+			NSData *SOIData = [NSData dataWithBytes:SOIToken length:sizeof(SOIToken)];
 			
-			const NSRange SOIRange = [data rangeOfData:SOIData options:NSDataSearchBackwards range:searchRange];
-			if (SOIRange.location == NSNotFound)
-			{
-				break;
-			}
+			const uint8_t EOIToken[2] = { 0xFF, 0xD9 };	// End Of Image
+			NSData *EOIData = [NSData dataWithBytes:EOIToken length:sizeof(EOIToken)];
 			
-			// Search the next EOI Token
+			NSRange JPEGRange = NSMakeRange(NSNotFound, 0);
 			
-			searchRange = NSMakeRange(NSMaxRange(SOIRange), data.length - NSMaxRange(SOIRange));
-			
-			const NSRange EOIRange = [data rangeOfData:EOIData options:NSDataSearchBackwards range:searchRange];
-			if (EOIRange.location != NSNotFound)
+			NSRange searchRange = NSMakeRange(0, data.length);
+			do
 			{
-				// found an image
-				JPEGRange = NSMakeRange(SOIRange.location, NSMaxRange(EOIRange) - SOIRange.location);
-				break;
-			}
-
-			// asuming the data looks like this [...SOI....EOI...SOI...] we need to check for a previous SOI
-			searchRange = NSMakeRange(0, SOIRange.location);
-		}
-		while(1);
-
-		if (JPEGRange.location != NSNotFound)
-		{
-			NSData *JPEGData = [data subdataWithRange:JPEGRange];
-			CIImage *JPEGImage = [[CIImage alloc] initWithData:JPEGData options:nil];
-			if (JPEGImage != nil)
-			{
-				NSLock *lock = self.lock;
-				[lock lock];
-				{
-					self.connectionState = QCMJPEGConnectionStateReceivingData;
-					self.lastConnectionError = @"";
-					self.image = JPEGImage;
-				}
-				[lock unlock];
-			}
-		
-			if (data.length == NSMaxRange(JPEGRange))
-			{
-				// no more data left
-				data.length = 0;
-			}
-			else
-			{
-				NSRange searchRange = NSMakeRange(NSMaxRange(JPEGRange), data.length - NSMaxRange(JPEGRange));
+				// Search the last SOI Token first
 				
-				const NSRange SOIRange = [data rangeOfData:SOIData options:0 range:searchRange];
+				const NSRange SOIRange = [data rangeOfData:SOIData options:NSDataSearchBackwards range:searchRange];
 				if (SOIRange.location == NSNotFound)
 				{
-					// no JPEG SOI found, can be discarded
+					break;
+				}
+				
+				// Search the next EOI Token
+				
+				searchRange = NSMakeRange(NSMaxRange(SOIRange), data.length - NSMaxRange(SOIRange));
+				
+				const NSRange EOIRange = [data rangeOfData:EOIData options:NSDataSearchBackwards range:searchRange];
+				if (EOIRange.location != NSNotFound)
+				{
+					// found an image
+					JPEGRange = NSMakeRange(SOIRange.location, NSMaxRange(EOIRange) - SOIRange.location);
+					break;
+				}
+				
+				// asuming the data looks like this [...SOI....EOI...SOI...] we need to check for a previous SOI
+				searchRange = NSMakeRange(0, SOIRange.location);
+			}
+			while(1);
+			
+			if (JPEGRange.location != NSNotFound)
+			{
+				NSData *JPEGData = [data subdataWithRange:JPEGRange];
+
+				dispatch_async(self.queue, ^{
+					
+					@autoreleasepool
+					{
+						CIImage *JPEGImage = [[CIImage alloc] initWithData:JPEGData options:nil];
+						if (JPEGImage != nil)
+						{
+							NSLock *lock = self.lock;
+							[lock lock];
+							{
+								self.connectionState = QCMJPEGConnectionStateReceivingData;
+								self.lastConnectionError = @"";
+								self.image = JPEGImage;
+							}
+							[lock unlock];
+						}
+						
+						
+						dispatch_semaphore_signal(renderSemaphore);
+					}
+				});
+				
+				if (data.length == NSMaxRange(JPEGRange))
+				{
+					// no more data left
 					data.length = 0;
 				}
 				else
 				{
-					// keep the data starting at the next SOI
-					[data replaceBytesInRange:NSMakeRange(0, SOIRange.location) withBytes:NULL length:0];
+					NSRange searchRange = NSMakeRange(NSMaxRange(JPEGRange), data.length - NSMaxRange(JPEGRange));
+					
+					const NSRange SOIRange = [data rangeOfData:SOIData options:0 range:searchRange];
+					if (SOIRange.location == NSNotFound)
+					{
+						// no JPEG SOI found, can be discarded
+						data.length = 0;
+					}
+					else
+					{
+						// keep the data starting at the next SOI
+						[data replaceBytesInRange:NSMakeRange(0, SOIRange.location) withBytes:NULL length:0];
+					}
 				}
+
+			}
+			else
+			{
+				// no jpeg data found yet
+				dispatch_semaphore_signal(renderSemaphore);
+
 			}
 		}
+
+		
 	}
 }
 
