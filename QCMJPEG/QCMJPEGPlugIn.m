@@ -178,6 +178,10 @@
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
+	if(connection != self.connection)
+	{
+		return;
+	}
 
 	NSLock *lock = self.lock;
 	[lock lock];
@@ -199,6 +203,11 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
+	if(connection != self.connection)
+	{
+		return;
+	}
+
 	NSLock *lock = self.lock;
 	[lock lock];
 	{
@@ -212,6 +221,11 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)newData
 {
+	if(connection != self.connection)
+	{
+		return;
+	}
+
 	NSLock *lock = self.lock;
 	[lock lock];
 	{
@@ -336,6 +350,11 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
+	if(connection != self.connection)
+	{
+		return;
+	}
+
 	[self stopConnection];
 }
 
