@@ -20,6 +20,8 @@
 @property (nonatomic, strong) dispatch_queue_t queue;
 @property (nonatomic, strong) dispatch_semaphore_t renderSemaphore;
 
+@property (nonatomic, strong) NSTimer *watchDogTimer;
+
 @end
 
 
@@ -378,6 +380,10 @@
 	}
 }
 
+- (void)watchDogTimerFired:(NSTimer*)timer
+{
+	[self stopConnection];
+}
 
 - (BOOL)startExecution:(id <QCPlugInContext>)context
 {
@@ -427,7 +433,11 @@
 	}
 	
 	self.outputConnectionState = self.connectionState;
-	
+
+	// setup a watchdog to stop the connection once the QC isn't calling this patch anymore.
+	[self.watchDogTimer invalidate];
+	self.watchDogTimer = [NSTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(watchDogTimerFired:) userInfo:nil repeats:NO];
+
 	[lock unlock];
 	
 	return YES;
