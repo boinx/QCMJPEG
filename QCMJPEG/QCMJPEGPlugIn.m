@@ -126,6 +126,8 @@
 
 - (void)dealloc
 {
+	[self.watchDogTimer invalidate];
+
 	NSThread *connectionThread = self.connectionThread;
 	if(connectionThread != nil)
 	{
@@ -163,6 +165,13 @@
 
 - (void)connectionTimerFired
 {
+}
+
+- (void)updateWatchDogTimer
+{
+	// setup a watchdog to stop the connection once the QC isn't calling this patch anymore.
+	[self.watchDogTimer invalidate];
+	self.watchDogTimer = [NSTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(watchDogTimerFired:) userInfo:nil repeats:NO];
 }
 
 #pragma mark - NSURLConnectionDelegate, NSURLConnectionDataDelegate
@@ -433,10 +442,8 @@
 	}
 	
 	self.outputConnectionState = self.connectionState;
-
-	// setup a watchdog to stop the connection once the QC isn't calling this patch anymore.
-	[self.watchDogTimer invalidate];
-	self.watchDogTimer = [NSTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(watchDogTimerFired:) userInfo:nil repeats:NO];
+	
+	[self performSelector:@selector(updateWatchDogTimer) onThread:self.connectionThread withObject:nil waitUntilDone:NO];
 
 	[lock unlock];
 	
