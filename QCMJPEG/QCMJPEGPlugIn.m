@@ -21,6 +21,9 @@
 @property (nonatomic, strong) dispatch_semaphore_t renderSemaphore;
 
 @property (nonatomic, strong) NSTimer *watchDogTimer;
+@property (assign) BOOL dataSearchSOI;
+@property (assign) NSRange JPEGRange;
+@property (assign) NSUInteger dataSOIPointer;
 
 @end
 
@@ -219,12 +222,37 @@
 	[lock unlock];
 }
 
+// #define MEASUREDATARATE 1
+#ifdef MEASUREDATARATE
+	long callCount;
+	long dataCount;
+	uint64_t lastDataRateUpdate;
+#endif
+
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)newData
 {
 	if(connection != self.connection)
 	{
 		return;
 	}
+
+#ifdef MEASUREDATARATE
+	callCount ++;
+	dataCount = dataCount + newData.length;
+	uint64_t now = CVGetCurrentHostTime();
+	
+	const double clock_freq = CVGetHostClockFrequency();
+	
+	if( now > lastDataRateUpdate + clock_freq)
+	{
+		
+		CGFloat secs = (now - lastDataRateUpdate) / clock_freq;
+		NSLog(@"calls/sec=%d dataThroughPut=%ld junkSize=%lu", (int)(callCount / secs), dataCount, newData.length);
+		callCount = 0;
+		dataCount = 0;
+		lastDataRateUpdate = now;
+	}
+#endif
 
 	NSLock *lock = self.lock;
 	[lock lock];
@@ -239,58 +267,75 @@
 	@autoreleasepool
 	{
 		NSMutableData *data = self.data;
-		if (data == nil)
+		if (data == nil || data.length > 10000000)
 		{
+			// lazzy creation of the data buffer
+			// savety net: 10MB are much to much data for a JPEG frame, so we kill the data buffer and start all over again.
 			data = [NSMutableData dataWithCapacity:64 * 1024];
 			self.data = data;
+			self.dataSearchSOI = YES;	// search for SOI (Start Of Image)
+			self.JPEGRange = NSMakeRange(NSNotFound, 0);
 		}
 
+		NSUInteger dataPointer = data.length;	// only search in the new buffer
 		[data appendData:newData];
 		
+		const uint8_t SOIToken[2] = { 0xFF, 0xD8 };	// Start Of Image
+		NSData *SOIData = [NSData dataWithBytes:SOIToken length:sizeof(SOIToken)];
 		
-		dispatch_semaphore_t renderSemaphore = self.renderSemaphore;
-		if (dispatch_semaphore_wait(renderSemaphore, DISPATCH_TIME_NOW) == 0)
+		const uint8_t EOIToken[2] = { 0xFF, 0xD9 };	// End Of Image
+		NSData *EOIData = [NSData dataWithBytes:EOIToken length:sizeof(EOIToken)];
+		
+		NSRange SOIRange = NSMakeRange(NSNotFound, 0);
+		NSRange EOIRange = NSMakeRange(NSNotFound, 0);
+
+		BOOL keepSearching = YES;
+		do
 		{
-			const uint8_t SOIToken[2] = { 0xFF, 0xD8 };	// Start Of Image
-			NSData *SOIData = [NSData dataWithBytes:SOIToken length:sizeof(SOIToken)];
-			
-			const uint8_t EOIToken[2] = { 0xFF, 0xD9 };	// End Of Image
-			NSData *EOIData = [NSData dataWithBytes:EOIToken length:sizeof(EOIToken)];
-			
-			NSRange JPEGRange = NSMakeRange(NSNotFound, 0);
-			
-			NSRange searchRange = NSMakeRange(0, data.length);
-			do
+			NSRange searchRange = NSMakeRange(dataPointer, data.length - dataPointer);
+
+			if (self.dataSearchSOI)
 			{
-				// Search the last SOI Token first
-				
-				const NSRange SOIRange = [data rangeOfData:SOIData options:NSDataSearchBackwards range:searchRange];
-				if (SOIRange.location == NSNotFound)
+				SOIRange = [data rangeOfData:SOIData options:0 range:searchRange];
+				if (SOIRange.location != NSNotFound)
 				{
-					break;
+					self.dataSOIPointer = SOIRange.location;
+					dataPointer = SOIRange.location+1;
+					self.dataSearchSOI = NO;
 				}
+				else
+				{
+					keepSearching = NO;
+				}
+			}
+			else
+			{
 				
-				// Search the next EOI Token
-				
-				searchRange = NSMakeRange(NSMaxRange(SOIRange), data.length - NSMaxRange(SOIRange));
-				
-				const NSRange EOIRange = [data rangeOfData:EOIData options:NSDataSearchBackwards range:searchRange];
+				EOIRange = [data rangeOfData:EOIData options:0 range:searchRange];
 				if (EOIRange.location != NSNotFound)
 				{
-					// found an image
-					JPEGRange = NSMakeRange(SOIRange.location, NSMaxRange(EOIRange) - SOIRange.location);
-					break;
+					self.JPEGRange = NSMakeRange(self.dataSOIPointer, NSMaxRange(EOIRange) - self.dataSOIPointer);	// store last JPEG position
+					dataPointer = EOIRange.location+1;
+					self.dataSOIPointer = 0;
+					self.dataSearchSOI = YES;
 				}
-				
-				// asuming the data looks like this [...SOI....EOI...SOI...] we need to check for a previous SOI
-				searchRange = NSMakeRange(0, SOIRange.location);
+				else
+				{
+					keepSearching = NO;
+				}
 			}
-			while(1);
-			
-			if (JPEGRange.location != NSNotFound)
+		}
+		while(keepSearching);
+		
+		if (self.JPEGRange.location != NSNotFound)
+		{
+			// JPEG found
+			dispatch_semaphore_t renderSemaphore = self.renderSemaphore;
+			if (dispatch_semaphore_wait(renderSemaphore, DISPATCH_TIME_NOW) == 0)	// are we currently decoding?
 			{
-				NSData *JPEGData = [data subdataWithRange:JPEGRange];
+				NSData *JPEGData = [data subdataWithRange:self.JPEGRange];
 
+				// decode JPEG on another thread
 				dispatch_async(self.queue, ^{
 					
 					@autoreleasepool
@@ -313,39 +358,16 @@
 					}
 				});
 				
-				if (data.length == NSMaxRange(JPEGRange))
-				{
-					// no more data left
-					data.length = 0;
-				}
-				else
-				{
-					NSRange searchRange = NSMakeRange(NSMaxRange(JPEGRange), data.length - NSMaxRange(JPEGRange));
-					
-					const NSRange SOIRange = [data rangeOfData:SOIData options:0 range:searchRange];
-					if (SOIRange.location == NSNotFound)
-					{
-						// no JPEG SOI found, can be discarded
-						data.length = 0;
-					}
-					else
-					{
-						// keep the data starting at the next SOI
-						[data replaceBytesInRange:NSMakeRange(0, SOIRange.location) withBytes:NULL length:0];
-					}
-				}
-
+				NSUInteger bytesToRemove = NSMaxRange(self.JPEGRange);
+				[data replaceBytesInRange:NSMakeRange(0, bytesToRemove) withBytes:NULL length:0];
+				self.dataSOIPointer = self.dataSOIPointer - bytesToRemove;
+				self.JPEGRange = NSMakeRange(NSNotFound, 0);
 			}
-			else
-			{
-				// no jpeg data found yet
-				dispatch_semaphore_signal(renderSemaphore);
 
-			}
 		}
 
-		
 	}
+
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
