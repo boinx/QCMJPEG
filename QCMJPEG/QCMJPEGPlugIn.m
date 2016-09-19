@@ -17,6 +17,14 @@
 
 @property (nonatomic, strong) NSMutableData *data;
 
+@property (nonatomic, strong) dispatch_queue_t queue;
+@property (nonatomic, strong) dispatch_semaphore_t renderSemaphore;
+
+@property (nonatomic, strong) NSTimer *watchDogTimer;
+@property (assign) BOOL dataSearchSOI;
+@property (assign) NSRange JPEGRange;
+@property (assign) NSUInteger dataSOIPointer;
+
 @end
 
 
@@ -104,18 +112,25 @@
 		lock.name = @"QCMJPEGPlugIn.lock";
 		self.lock = lock;
 		
+		self.renderSemaphore = dispatch_semaphore_create(2);
+		self.queue = dispatch_queue_create("QCMJPEGImageDecode", DISPATCH_QUEUE_SERIAL);
+
 		NSThread *connectionThread = [[NSThread alloc] initWithTarget:self selector:@selector(startConnectionThread) object:nil];
 		connectionThread.name = @"QCMJPEGPlugIn.connectionThead";
 		self.connectionThread = connectionThread;
 		self.connectionState = QCMJPEGConnectionStateDisconnected;
 		
 		[connectionThread start];
+		
+
 	}
 	return self;
 }
 
 - (void)dealloc
 {
+	[self.watchDogTimer invalidate];
+
 	NSThread *connectionThread = self.connectionThread;
 	if(connectionThread != nil)
 	{
@@ -155,10 +170,21 @@
 {
 }
 
+- (void)updateWatchDogTimer
+{
+	// setup a watchdog to stop the connection once the QC isn't calling this patch anymore.
+	[self.watchDogTimer invalidate];
+	self.watchDogTimer = [NSTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(watchDogTimerFired:) userInfo:nil repeats:NO];
+}
+
 #pragma mark - NSURLConnectionDelegate, NSURLConnectionDataDelegate
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
+	if(connection != self.connection)
+	{
+		return;
+	}
 
 	NSLock *lock = self.lock;
 	[lock lock];
@@ -180,6 +206,11 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
+	if(connection != self.connection)
+	{
+		return;
+	}
+
 	NSLock *lock = self.lock;
 	[lock lock];
 	{
@@ -191,8 +222,38 @@
 	[lock unlock];
 }
 
+// #define MEASUREDATARATE 1
+#ifdef MEASUREDATARATE
+	long callCount;
+	long dataCount;
+	uint64_t lastDataRateUpdate;
+#endif
+
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)newData
 {
+	if(connection != self.connection)
+	{
+		return;
+	}
+
+#ifdef MEASUREDATARATE
+	callCount ++;
+	dataCount = dataCount + newData.length;
+	uint64_t now = CVGetCurrentHostTime();
+	
+	const double clock_freq = CVGetHostClockFrequency();
+	
+	if( now > lastDataRateUpdate + clock_freq)
+	{
+		
+		CGFloat secs = (now - lastDataRateUpdate) / clock_freq;
+		NSLog(@"calls/sec=%d dataThroughPut=%ld junkSize=%lu", (int)(callCount / secs), dataCount, newData.length);
+		callCount = 0;
+		dataCount = 0;
+		lastDataRateUpdate = now;
+	}
+#endif
+
 	NSLock *lock = self.lock;
 	[lock lock];
 	{
@@ -206,91 +267,116 @@
 	@autoreleasepool
 	{
 		NSMutableData *data = self.data;
-		if (data == nil)
+		if (data == nil || data.length > 10000000)
 		{
+			// lazzy creation of the data buffer
+			// savety net: 10MB are much to much data for a JPEG frame, so we kill the data buffer and start all over again.
 			data = [NSMutableData dataWithCapacity:64 * 1024];
 			self.data = data;
+			self.dataSearchSOI = YES;	// search for SOI (Start Of Image)
+			self.JPEGRange = NSMakeRange(NSNotFound, 0);
 		}
 
+		NSUInteger dataPointer = data.length;	// only search in the new buffer
 		[data appendData:newData];
 		
-		const uint8_t SOIToken[2] = { 0xFF, 0xD8 };
+		const uint8_t SOIToken[2] = { 0xFF, 0xD8 };	// Start Of Image
 		NSData *SOIData = [NSData dataWithBytes:SOIToken length:sizeof(SOIToken)];
 		
-		const uint8_t EOIToken[2] = { 0xFF, 0xD9 };
+		const uint8_t EOIToken[2] = { 0xFF, 0xD9 };	// End Of Image
 		NSData *EOIData = [NSData dataWithBytes:EOIToken length:sizeof(EOIToken)];
 		
-		NSRange JPEGRange = NSMakeRange(NSNotFound, 0);
-		
-		NSRange searchRange = NSMakeRange(0, data.length);
+		NSRange SOIRange = NSMakeRange(NSNotFound, 0);
+		NSRange EOIRange = NSMakeRange(NSNotFound, 0);
+
+		BOOL keepSearching = YES;
 		do
 		{
-			// Search the last SOI Token first
-			
-			const NSRange SOIRange = [data rangeOfData:SOIData options:NSDataSearchBackwards range:searchRange];
-			if (SOIRange.location == NSNotFound)
-			{
-				break;
-			}
-			
-			// Search the next EOI Token
-			
-			searchRange = NSMakeRange(NSMaxRange(SOIRange), data.length - NSMaxRange(SOIRange));
-			
-			const NSRange EOIRange = [data rangeOfData:EOIData options:NSDataSearchBackwards range:searchRange];
-			if (EOIRange.location == NSNotFound)
-			{
-				searchRange = NSMakeRange(0, SOIRange.location);
-				continue;
-			}
-			
-			JPEGRange = NSMakeRange(SOIRange.location, NSMaxRange(EOIRange) - SOIRange.location);
-		}
-		while(1);
+			NSRange searchRange = NSMakeRange(dataPointer, data.length - dataPointer);
 
-		if (JPEGRange.location != NSNotFound)
-		{
-			NSData *JPEGData = [data subdataWithRange:JPEGRange];
-			CIImage *JPEGImage = [[CIImage alloc] initWithData:JPEGData options:nil];
-			if (JPEGImage != nil)
+			if (self.dataSearchSOI)
 			{
-				NSLock *lock = self.lock;
-				[lock lock];
+				SOIRange = [data rangeOfData:SOIData options:0 range:searchRange];
+				if (SOIRange.location != NSNotFound)
 				{
-					self.connectionState = QCMJPEGConnectionStateReceivingData;
-					self.lastConnectionError = @"";
-					self.image = JPEGImage;
-				}
-				[lock unlock];
-			}
-		
-			if (data.length == NSMaxRange(JPEGRange))
-			{
-				// no more data left
-				data.length = 0;
-			}
-			else
-			{
-				NSRange searchRange = NSMakeRange(NSMaxRange(JPEGRange), data.length - NSMaxRange(JPEGRange));
-				
-				const NSRange SOIRange = [data rangeOfData:SOIData options:0 range:searchRange];
-				if (SOIRange.location == NSNotFound)
-				{
-					// no JPEG SOI found, can be discarded
-					data.length = 0;
+					self.dataSOIPointer = SOIRange.location;
+					dataPointer = SOIRange.location+1;
+					self.dataSearchSOI = NO;
 				}
 				else
 				{
-					// keep the data starting at the next SOI
-					[data replaceBytesInRange:NSMakeRange(0, SOIRange.location) withBytes:NULL length:0];
+					keepSearching = NO;
+				}
+			}
+			else
+			{
+				
+				EOIRange = [data rangeOfData:EOIData options:0 range:searchRange];
+				if (EOIRange.location != NSNotFound)
+				{
+					self.JPEGRange = NSMakeRange(self.dataSOIPointer, NSMaxRange(EOIRange) - self.dataSOIPointer);	// store last JPEG position
+					dataPointer = EOIRange.location+1;
+					self.dataSOIPointer = 0;
+					self.dataSearchSOI = YES;
+				}
+				else
+				{
+					keepSearching = NO;
 				}
 			}
 		}
+		while(keepSearching);
+		
+		if (self.JPEGRange.location != NSNotFound)
+		{
+			// JPEG found
+			dispatch_semaphore_t renderSemaphore = self.renderSemaphore;
+			if (dispatch_semaphore_wait(renderSemaphore, DISPATCH_TIME_NOW) == 0)	// are we currently decoding?
+			{
+				NSData *JPEGData = [data subdataWithRange:self.JPEGRange];
+
+				// decode JPEG on another thread
+				dispatch_async(self.queue, ^{
+					
+					@autoreleasepool
+					{
+						CIImage *JPEGImage = [[CIImage alloc] initWithData:JPEGData options:nil];
+						if (JPEGImage != nil)
+						{
+							NSLock *lock = self.lock;
+							[lock lock];
+							{
+								self.connectionState = QCMJPEGConnectionStateReceivingData;
+								self.lastConnectionError = @"";
+								self.image = JPEGImage;
+							}
+							[lock unlock];
+						}
+						
+						
+						dispatch_semaphore_signal(renderSemaphore);
+					}
+				});
+				
+				NSUInteger bytesToRemove = NSMaxRange(self.JPEGRange);
+				[data replaceBytesInRange:NSMakeRange(0, bytesToRemove) withBytes:NULL length:0];
+				self.dataSOIPointer = self.dataSOIPointer - bytesToRemove;
+				self.JPEGRange = NSMakeRange(NSNotFound, 0);
+			}
+
+		}
+
 	}
+
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
+	if(connection != self.connection)
+	{
+		return;
+	}
+
 	[self stopConnection];
 }
 
@@ -344,6 +430,10 @@
 	}
 }
 
+- (void)watchDogTimerFired:(NSTimer*)timer
+{
+	[self stopConnection];
+}
 
 - (BOOL)startExecution:(id <QCPlugInContext>)context
 {
@@ -394,6 +484,8 @@
 	
 	self.outputConnectionState = self.connectionState;
 	
+	[self performSelector:@selector(updateWatchDogTimer) onThread:self.connectionThread withObject:nil waitUntilDone:NO];
+
 	[lock unlock];
 	
 	return YES;
