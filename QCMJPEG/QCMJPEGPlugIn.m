@@ -116,7 +116,7 @@
 		self.queue = dispatch_queue_create("QCMJPEGImageDecode", DISPATCH_QUEUE_SERIAL);
 
 		NSThread *connectionThread = [[NSThread alloc] initWithTarget:self selector:@selector(startConnectionThread) object:nil];
-		connectionThread.name = @"QCMJPEGPlugIn.connectionThead";
+		connectionThread.name = @"QCMJPEGPlugIn.connectionThread";
 		self.connectionThread = connectionThread;
 		self.connectionState = QCMJPEGConnectionStateDisconnected;
 		
