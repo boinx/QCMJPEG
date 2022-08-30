@@ -112,7 +112,10 @@
 		lock.name = @"QCMJPEGPlugIn.lock";
 		self.lock = lock;
 		
-		self.renderSemaphore = dispatch_semaphore_create(2);
+		self.renderSemaphore = dispatch_semaphore_create(0);
+		dispatch_semaphore_signal(self.renderSemaphore);	// init with "2" (dispatch_semaphore_create(2) may crash on deallocation)
+		dispatch_semaphore_signal(self.renderSemaphore);
+
 		self.queue = dispatch_queue_create("QCMJPEGImageDecode", DISPATCH_QUEUE_SERIAL);
 
 		NSThread *connectionThread = [[NSThread alloc] initWithTarget:self selector:@selector(startConnectionThread) object:nil];
